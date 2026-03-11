@@ -1,41 +1,65 @@
 # Multi Hotdeal Notifier
 
-여러 핫딜 사이트를 주기적으로 확인하여  
-**새 게시글이 등록되면 Discord로 알림을 보내는 Python 기반 자동화 프로젝트**입니다.
+A Python-based automation system that monitors multiple hot deal communities and sends notifications to Discord when new posts are detected.
 
-이 프로젝트는 단순 크롤러가 아니라
+This project is designed as a **multi-source monitoring system**, not just a simple crawler.  
+It independently tracks several sites, stores post history in SQLite, and detects only newly posted deals without duplicates.
 
-- 여러 사이트를 **독립적으로 감시**
-- 게시글 이력을 **SQLite에 저장**
-- **중복 없이 새 글만 감지**
+---
 
-하도록 설계된 **멀티 사이트 핫딜 알림 시스템**입니다.
+# Architecture
+
+```
+Hotdeal Sites
+     │
+     ▼
+Crawler Modules
+     │
+     ▼
+SQLite Database
+     │
+     ▼
+Notification System
+     │
+     ▼
+Discord Webhook
+```
+
+---
+
+# Overview
+
+The system periodically crawls multiple hot deal communities and compares the latest posts with previously stored records.
+
+If a new post is detected, the system sends a notification through a **Discord Webhook** and stores the post in the database.
+
+The service is designed to run continuously on a server using **Oracle Cloud VM and systemd**.
 
 ---
 
 # Features
 
-- 여러 핫딜 사이트 게시글 수집  
-- 사이트별 최신 게시글 자동 추출  
-- SQLite 기반 게시글 이력 저장  
-- 이전 게시글과 비교하여 **새 글만 감지**  
-- Discord Webhook 알림 전송  
-- APScheduler 기반 **주기 실행**  
-- `.env` 기반 환경변수 설정  
-- **멀티 사이트 확장 가능한 크롤러 구조**  
-- Oracle Cloud VM 배포  
-- systemd 기반 백그라운드 서비스 운영  
+- Monitor multiple hot deal communities
+- Extract latest posts from each site
+- Store post history using SQLite
+- Detect new posts by comparing with previous records
+- Send notifications through Discord Webhooks
+- Scheduled execution using APScheduler
+- Environment variable configuration with `.env`
+- Modular crawler architecture for easy site expansion
+- Cloud deployment on Oracle Cloud VM
+- Background service operation using systemd
 
 ---
 
 # Supported Sites
 
-현재 지원 사이트
+Currently supported communities:
 
-- FM코리아 핫딜  
-- 루리웹 핫딜  
-- 어미새 인기정보  
-- 뽐뿌 핫딜  
+- FMKorea Hotdeal
+- Ruliweb Hotdeal
+- Eomisae Popular Deals
+- PPOMPPU Hotdeal
 
 ---
 
@@ -47,10 +71,10 @@
 
 ## Libraries
 
-- requests  
-- BeautifulSoup4  
-- APScheduler  
-- python-dotenv  
+- requests
+- BeautifulSoup4
+- APScheduler
+- python-dotenv
 
 ## Storage
 
@@ -81,13 +105,15 @@ multi-hotdeal-notifier/
     └── ruliweb.py
 ```
 
+The project uses a **modular crawler architecture** where each site has its own crawler module.
+
 ---
 
 # Setup
 
 ## 1. Create virtual environment
 
-```bash
+```
 python -m venv venv
 ```
 
@@ -95,19 +121,19 @@ python -m venv venv
 
 ### Windows
 
-```bash
+```
 venv\Scripts\activate
 ```
 
 ### Mac / Linux
 
-```bash
+```
 source venv/bin/activate
 ```
 
 ## 3. Install dependencies
 
-```bash
+```
 pip install -r requirements.txt
 ```
 
@@ -115,63 +141,50 @@ pip install -r requirements.txt
 
 # Environment Variables
 
-`.env.example` 파일을 `.env`로 복사한 후 값을 입력합니다.
+Copy `.env.example` to `.env` and configure values.
 
-```bash
+```
 cp .env.example .env
 ```
 
 Example:
 
-```env
+```
 DISCORD_WEBHOOK_URL=your_discord_webhook_url
 CHECK_INTERVAL_MINUTES=10
 ```
 
 | Variable | Description |
-|--------|--------|
-| DISCORD_WEBHOOK_URL | Discord Webhook URL for notifications |
-| CHECK_INTERVAL_MINUTES | 게시글 확인 주기 (분) |
+|--------|-------------|
+| DISCORD_WEBHOOK_URL | Discord webhook URL for notifications |
+| CHECK_INTERVAL_MINUTES | Interval for checking new posts |
 
 ---
 
-# Run
+# Running the Project
 
 ## One-time check
 
-```bash
+```
 python app.py
 ```
 
-## Run scheduler
+## Run scheduled monitoring
 
-```bash
+```
 python run.py
 ```
 
-정상 실행 시 예시
+Example output:
 
 ```
-스케줄러 시작: 10분마다 점검
-[CHECK] 사이트 점검 시작
+Scheduler started: checking every 10 minutes
+[CHECK] Starting site monitoring
 ```
 
 ---
 
-# How It Works
-
-동작 흐름
-
-1. `sites.json`에서 감시할 사이트 목록 로드  
-2. 사이트별 크롤러 실행  
-3. 최신 게시글 목록 수집  
-4. SQLite DB에 저장된 기존 게시글과 비교  
-5. 새 글만 Discord Webhook으로 전송  
-6. 새 게시글 이력을 DB에 저장  
-
----
-
-# System Flow
+# System Workflow
 
 ```
 sites.json
@@ -183,7 +196,7 @@ Crawler (per site)
 Collect latest posts
      │
      ▼
-Compare with SQLite DB
+Compare with SQLite database
      │
  ┌───┴──────────────┐
  │                  │
@@ -198,43 +211,40 @@ Ignore          Send Discord Webhook
 
 ---
 
-# Design Notes
+# Design Considerations
 
-이 프로젝트는 **상품 단위 중복 제거보다  
-사이트별 게시글 신규 감지를 우선하도록 설계**했습니다.
+Instead of attempting to detect identical products across communities,  
+the system focuses on detecting **new posts per site**.
 
-핫딜 게시판은 같은 상품이라도 사이트마다
+Different communities often present the same deal with different:
 
-- 제목
-- 할인 조건
-- 설명 방식
-- 강조 포인트
+- titles
+- discount descriptions
+- emphasis points
+- additional information
 
-가 서로 다르기 때문에  
-**동일 상품 여부보다 각 사이트의 새 게시글 자체를 독립적인 정보로 판단했습니다.**
+Therefore each site's new post is treated as an independent information source.
 
 ---
 
-# Current Limitations
+# Limitations
 
-일부 사이트는 요청 빈도나 접근 방식에 따라  
-**차단 응답이 발생할 수 있습니다.**
+Some sites may return blocking responses depending on request frequency.
 
-특히 **FM코리아**는 상황에 따라 접근이 불안정할 수 있어  
-추가적인 안정화가 필요합니다.
+In particular, **FMKorea may occasionally block requests**, requiring additional stability improvements.
 
 ---
 
 # Future Improvements
 
-- 추가 핫딜 사이트 확장  
-- 키워드 기반 맞춤 알림  
-- 제외 키워드 기능  
-- Discord 임베드 메시지  
-- Docker 배포  
+- Support for additional hot deal communities
+- Keyword-based notification filtering
+- Exclusion keyword support
+- Rich Discord embed messages
+- Docker-based deployment
 
 ---
 
 # Author
 
-**cbssmh**
+cbssmh
