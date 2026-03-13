@@ -1,15 +1,17 @@
 import time
 from config import load_sites
-from db import init_db, has_post, save_posts
+from db import init_db, has_post, save_posts, has_any_posts
 from notifier import send_discord_message, format_post_message
 from crawlers.fmkorea import get_fmkorea_posts
 from crawlers.ruliweb import get_ruliweb_posts
 from crawlers.eomisae import get_eomisae_posts
+from crawlers.ppomppu import get_ppomppu_posts
 
 CRAWLER_MAP = {
     "fmkorea": get_fmkorea_posts,
     "ruliweb": get_ruliweb_posts,
     "eomisae": get_eomisae_posts,
+    "ppomppu": get_ppomppu_posts,
 }
 
 
@@ -37,6 +39,12 @@ def main():
 
         try:
             posts = crawler(limit=check_limit)
+
+            if posts is None:
+                print("[WARN] 수집 실패")
+                time.sleep(1)
+                continue
+
             print(f"수집 결과: {len(posts)}개")
 
             if not posts:
@@ -49,20 +57,30 @@ def main():
                 if not has_post(site_name, post["id"]):
                     new_posts.append(post)
 
-            if len(new_posts) == len(posts):
+            site_initialized = has_any_posts(site_name)
+
+            if not site_initialized:
                 print("[INIT] 첫 실행으로 판단, DB 초기화 저장만 진행")
                 save_posts(site_name, posts)
+
             elif not new_posts:
                 print("[INFO] 새 글 없음")
+
             else:
                 print(f"[NEW] 새 글 {len(new_posts)}개 발견")
+                sent_posts = []
 
                 for post in reversed(new_posts):
-                    print(post)
-                    message = format_post_message(site_label, post)
-                    send_discord_message(message)
+                    try:
+                        print(post)
+                        message = format_post_message(site_label, post)
+                        send_discord_message(message)
+                        sent_posts.append(post)
+                    except Exception as e:
+                        print(f"[ERROR] Discord 전송 실패: {e}")
 
-                save_posts(site_name, new_posts)
+                if sent_posts:
+                    save_posts(site_name, sent_posts)
 
         except Exception as e:
             print(f"[ERROR] {site_label}: {e}")

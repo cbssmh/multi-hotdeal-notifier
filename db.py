@@ -19,6 +19,17 @@ def init_db():
             """)
 
 
+def has_any_posts(site_name):
+    with closing(sqlite3.connect(DB_PATH)) as conn:
+        cursor = conn.execute("""
+            SELECT 1
+            FROM posts
+            WHERE site_name = ?
+            LIMIT 1
+        """, (site_name,))
+        return cursor.fetchone() is not None
+
+
 def has_post(site_name, post_id):
     with closing(sqlite3.connect(DB_PATH)) as conn:
         cursor = conn.execute("""

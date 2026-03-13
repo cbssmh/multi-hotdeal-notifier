@@ -3,7 +3,7 @@
     "name": "fmkorea",
     "label": "FM코리아 핫딜",
     "url": "https://www.fmkorea.com/index.php?mid=hotdeal&sort_index=pop&order_type=desc",
-    "enabled": false,
+    "enabled": true,
     "check_limit": 20
   },
   {
@@ -17,6 +17,13 @@
     "name": "eomisae",
     "label": "어미새 인기정보",
     "url": "https://eomisae.co.kr/fs",
+    "enabled": true,
+    "check_limit": 20
+  },
+  {
+    "name": "ppomppu",
+    "label": "뽐뿌 핫딜",
+    "url": "https://www.ppomppu.co.kr/zboard/zboard.php?id=ppomppu&hotlist_flag=999",
     "enabled": true,
     "check_limit": 20
   }
