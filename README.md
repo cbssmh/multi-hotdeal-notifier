@@ -10,18 +10,18 @@ It independently tracks several sites, stores post history in SQLite, and detect
 # Architecture
 
 ```
-Hotdeal Sites
-     │
-     ▼
+Hotdeal Communities
+       │
+       ▼
 Crawler Modules
-     │
-     ▼
+       │
+       ▼
 SQLite Database
-     │
-     ▼
+       │
+       ▼
 Notification System
-     │
-     ▼
+       │
+       ▼
 Discord Webhook
 ```
 
@@ -33,7 +33,7 @@ The system periodically crawls multiple hot deal communities and compares the la
 
 If a new post is detected, the system sends a notification through a **Discord Webhook** and stores the post in the database.
 
-The service is designed to run continuously on a server using **Oracle Cloud VM and systemd**.
+The service is designed to run continuously on a server using **Oracle Cloud VM and systemd**, enabling automatic monitoring without manual execution.
 
 ---
 
@@ -45,7 +45,7 @@ The service is designed to run continuously on a server using **Oracle Cloud VM 
 - Detect new posts by comparing with previous records
 - Send notifications through Discord Webhooks
 - Scheduled execution using APScheduler
-- Environment variable configuration with `.env`
+- Environment variable configuration using `.env`
 - Modular crawler architecture for easy site expansion
 - Cloud deployment on Oracle Cloud VM
 - Background service operation using systemd
@@ -66,19 +66,22 @@ Currently supported communities:
 # Tech Stack
 
 ## Backend
-
 - Python
 
 ## Libraries
-
 - requests
 - BeautifulSoup4
 - APScheduler
 - python-dotenv
+- cloudscraper
 
 ## Storage
-
 - SQLite
+
+## Infrastructure
+- Oracle Cloud VM
+- Linux
+- systemd
 
 ---
 
@@ -105,35 +108,44 @@ multi-hotdeal-notifier/
     └── ruliweb.py
 ```
 
-The project uses a **modular crawler architecture** where each site has its own crawler module.
+The project uses a **modular crawler architecture**, where each site has its own crawler module.
+
+This structure makes it easy to add support for additional communities.
 
 ---
 
 # Setup
 
-## 1. Create virtual environment
+## 1. Clone the repository
 
+```bash
+git clone https://github.com/cbssmh/multi-hotdeal-notifier.git
+cd multi-hotdeal-notifier
 ```
+
+## 2. Create virtual environment
+
+```bash
 python -m venv venv
 ```
 
-## 2. Activate virtual environment
+## 3. Activate virtual environment
 
 ### Windows
 
-```
+```bash
 venv\Scripts\activate
 ```
 
 ### Mac / Linux
 
-```
+```bash
 source venv/bin/activate
 ```
 
-## 3. Install dependencies
+## 4. Install dependencies
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -141,13 +153,13 @@ pip install -r requirements.txt
 
 # Environment Variables
 
-Copy `.env.example` to `.env` and configure values.
+Copy `.env.example` to `.env` and configure the required values.
 
-```
+```bash
 cp .env.example .env
 ```
 
-Example:
+Example configuration:
 
 ```
 DISCORD_WEBHOOK_URL=your_discord_webhook_url
@@ -155,8 +167,8 @@ CHECK_INTERVAL_MINUTES=10
 ```
 
 | Variable | Description |
-|--------|-------------|
-| DISCORD_WEBHOOK_URL | Discord webhook URL for notifications |
+|---|---|
+| DISCORD_WEBHOOK_URL | Discord webhook URL used for sending notifications |
 | CHECK_INTERVAL_MINUTES | Interval for checking new posts |
 
 ---
@@ -165,13 +177,17 @@ CHECK_INTERVAL_MINUTES=10
 
 ## One-time check
 
-```
+Run the crawler once.
+
+```bash
 python app.py
 ```
 
 ## Run scheduled monitoring
 
-```
+Run the scheduled monitoring service.
+
+```bash
 python run.py
 ```
 
@@ -211,6 +227,26 @@ Ignore          Send Discord Webhook
 
 ---
 
+# Deployment
+
+The system is deployed on an **Oracle Cloud VM** and runs as a background service.
+
+The monitoring process is managed using **systemd**, allowing the service to:
+
+- automatically start when the server boots
+- restart automatically if the process crashes
+- run continuously without manual execution
+
+Example service management commands:
+
+```bash
+sudo systemctl start hotdeal-notifier
+sudo systemctl restart hotdeal-notifier
+systemctl status hotdeal-notifier
+```
+
+---
+
 # Design Considerations
 
 Instead of attempting to detect identical products across communities,  
@@ -223,15 +259,15 @@ Different communities often present the same deal with different:
 - emphasis points
 - additional information
 
-Therefore each site's new post is treated as an independent information source.
+Therefore each site's new post is treated as an **independent information source**.
 
 ---
 
 # Limitations
 
-Some sites may return blocking responses depending on request frequency.
+Some communities may occasionally return blocking responses depending on request patterns or server IP.
 
-In particular, **FMKorea may occasionally block requests**, requiring additional stability improvements.
+For example, **FMKorea may return HTTP 430 responses** in certain environments, which can temporarily prevent data collection from that site.
 
 ---
 
@@ -240,11 +276,14 @@ In particular, **FMKorea may occasionally block requests**, requiring additional
 - Support for additional hot deal communities
 - Keyword-based notification filtering
 - Exclusion keyword support
-- Rich Discord embed messages
+- Rich Discord embed notifications
 - Docker-based deployment
+- Automatic deployment workflow
 
 ---
 
 # Author
 
-cbssmh
+**cbssmh**
+
+https://github.com/cbssmh
