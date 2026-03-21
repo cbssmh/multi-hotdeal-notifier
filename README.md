@@ -282,8 +282,6 @@ For example, **FMKorea may return HTTP 430 responses** in certain environments, 
 
 ---
 
----
-
 # 🔧 Troubleshooting & Engineering Decisions
 
 ## 1. Handling Website Blocking (FMKorea 430 Error)
