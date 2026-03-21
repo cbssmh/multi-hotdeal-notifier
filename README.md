@@ -282,6 +282,34 @@ For example, **FMKorea may return HTTP 430 responses** in certain environments, 
 
 ---
 
+---
+
+# 🔧 Troubleshooting & Engineering Decisions
+
+## 1. Handling Website Blocking (FMKorea 430 Error)
+
+**Problem**  
+FMKorea occasionally returned `430 Client Error`, causing crawling failures.
+
+**Cause**  
+- Bot detection (User-Agent / request pattern / session)
+- Blocking triggered by repeated requests
+
+**Solution**
+- Added browser-level request headers
+- Implemented retry logic
+- Designed fail-safe behavior to prevent system-wide failure
+
+```python
+for attempt in range(3):
+    try:
+        response = session.get(url)
+    except:
+        time.sleep(3)
+```
+
+---
+
 # Author
 
 **cbssmh**
