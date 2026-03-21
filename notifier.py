@@ -16,7 +16,6 @@ def send_discord_message(content: str):
 
 def format_post_message(site_label: str, post: dict) -> str:
     return (
-        f"[새 핫딜 글]\n"
         f"사이트: {site_label}\n"
         f"제목: {post['title']}\n"
         f"링크: {post['url']}"
